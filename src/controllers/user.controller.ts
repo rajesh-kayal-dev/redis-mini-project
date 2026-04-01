@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import User from "../models/user.model";
+import client from "../config/redis";
 
 export const createUser = async (req:Request, res: Response)=>{
     try {
@@ -12,8 +13,25 @@ export const createUser = async (req:Request, res: Response)=>{
 
 export const getAllUser = async (req:Request, res:Response)=>{
     try {
+        const cacheKey = "users:all";
+        
+        const cachedUser = await client.get(cacheKey);
+
+        if(cachedUser){
+            console.log('✅ Cache HIT (ALL Users)');
+            return res.json(JSON.parse(cachedUser))
+        }
+
+        console.log('❌ Cache MISS (All Users)');
+
         const user = await User.find();
-        res.json(user)
+        
+        await client.set(cacheKey, JSON.stringify(user),{
+            EX:60,
+        });
+
+        res.json(user);
+
     } catch (error) {
         res.status(500).json({ message: 'Error fetching user' });
     }
@@ -21,7 +39,29 @@ export const getAllUser = async (req:Request, res:Response)=>{
 
 export const getUser = async (req:Request, res:Response)=>{
     try {
-        const user = await User.findById(req.params.id);
+        const {id} = req.params as {id: string};
+
+        const cacheduser = await client.get(id);
+
+        if(cacheduser){
+            console.log('✅ Cache HIT');
+            return res.json(JSON.parse(cacheduser));
+        }
+
+        console.log('❌ Cache MISS');
+
+        const user = await User.findById(id);
+
+        if(!user){
+            return res.status(404).json({
+                message: "User not found"
+            })
+        }
+
+        await client.set(id, JSON.stringify(user),{
+            EX: 60,
+        })
+        
         res.json(user)
     } catch (error) {
         res.status(500).json({ message: 'Error fetching user' });
