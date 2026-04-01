@@ -27,6 +27,10 @@ npm install express mongoose redis dotenv
 npm install -D typescript ts-node-dev @types/node @types/express
 ```
 
+```bash
+"dev": "nodemon --exec ts-node src/server.ts",
+```
+
 ### Init TypeScript
 
 ```bash
