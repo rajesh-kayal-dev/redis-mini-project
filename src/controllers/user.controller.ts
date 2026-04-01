@@ -1,12 +1,14 @@
 import { Request, Response } from "express";
 import User from "../models/user.model";
 import client from "../config/redis";
+import { CACHE_KEYS } from "../utils/cacheKeys";
 
 export const createUser = async (req:Request, res: Response)=>{
     try {
         const user = await User.create(req.body);
+        const cacheKey = CACHE_KEYS.USERS_ALL;
+        await client.del(cacheKey); 
 
-        await client.del("users:all"); 
         console.log('✅ List cache invalidated (New User Created)');
 
         res.status(200).json(user);
@@ -17,22 +19,20 @@ export const createUser = async (req:Request, res: Response)=>{
 
 export const getAllUser = async (req:Request, res:Response)=>{
     try {
-        const cacheKey = "users:all";
+        const cacheKey = CACHE_KEYS.USERS_ALL;
         
         const cachedUser = await client.get(cacheKey);
 
         if(cachedUser){
-            console.log('✅ Cache HIT (ALL Users)');
+            console.log('✅ Cache HIT (ALL Users)  → returning from Redis"');
             return res.json(JSON.parse(cachedUser))
         }
 
-        console.log('❌ Cache MISS (All Users)');
+        console.log('❌ Cache MISS (All Users) → fetching from DB');
 
         const user = await User.find();
         
-        await client.set(cacheKey, JSON.stringify(user),{
-            EX:60,
-        });
+        await client.setEx(cacheKey, 60, JSON.stringify(user));
 
         res.json(user);
 
@@ -46,14 +46,16 @@ export const getUser = async (req:Request, res:Response)=>{
     try {
         const {id} = req.params as {id: string};
 
-        const cacheduser = await client.get(id);
+        const cacheKey = CACHE_KEYS.USER_SINGLE(id);
+
+        const cacheduser = await client.get(cacheKey);
 
         if(cacheduser){
-            console.log('✅ Cache HIT');
+            console.log('✅ Cache HIT  → returning from Redis');
             return res.json(JSON.parse(cacheduser));
         }
 
-        console.log('❌ Cache MISS');
+        console.log('❌ Cache MISS → fetching from DB');
 
         const user = await User.findById(id);
 
@@ -63,9 +65,7 @@ export const getUser = async (req:Request, res:Response)=>{
             })
         }
 
-        await client.set(id, JSON.stringify(user),{
-            EX: 60,
-        })
+        await client.setEx(cacheKey, 60, JSON.stringify(user))
         
         res.json(user)
     } catch (error) {
@@ -88,10 +88,11 @@ export const updateUser = async (req:Request, res: Response)=>{
         return res.status(404).json({ message: 'User not found' });
     }
 
-    await client.del(id);
-    await client.del("users:all"); 
+     // Clear caches
+        await client.del(CACHE_KEYS.USERS_ALL);
+        await client.del(CACHE_KEYS.USER_SINGLE(id));
 
-    console.log('✅ Individual and List caches invalidated');
+        console.log('Cache cleared');
 
     res.json(updateUser);
 
