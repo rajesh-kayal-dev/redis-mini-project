@@ -5,13 +5,15 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "worker": "ts-node src/workers/user.worker.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "bullmq": "^5.72.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "mongoose": "^9.3.3",

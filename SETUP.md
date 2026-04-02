@@ -1,18 +1,17 @@
 # Redis Mini Project (Backend + TypeScript)
 
 ## Project Goal
-
-Learn Redis by building a real backend:
-
-* API with MongoDB
-* Redis caching
-* Rate limiting
-* Cache invalidation
+Learn Redis by building a real backend system with:
+- MongoDB API
+- Redis caching
+- Rate limiting
+- Cache invalidation
 
 ---
 
-# STEP 1: Project Setup
+## Project Setup
 
+### Initialize Project
 ```bash
 mkdir redis-mini-project
 cd redis-mini-project
@@ -20,27 +19,25 @@ npm init -y
 git init
 ```
 
-### Install dependencies
-
+### Install Dependencies
 ```bash
 npm install express mongoose redis dotenv
 npm install -D typescript ts-node-dev @types/node @types/express
 ```
 
-```bash
-"dev": "nodemon --exec ts-node src/server.ts",
+### Add Script (package.json)
+```json
+"dev": "nodemon --exec ts-node src/server.ts"
 ```
 
-### Init TypeScript
-
+### Initialize TypeScript
 ```bash
 npx tsc --init
 ```
 
 ---
 
-# Folder Structure
-
+## Folder Structure
 ```
 src/
  ├── app.ts
@@ -54,70 +51,63 @@ src/
 
 ---
 
-# STEP 2: Basic Server
+## Basic Server Setup
 
-## app.ts
+### app.ts
+- Setup Express
+- Add middleware
+- Register routes
 
-* Express setup
-* middleware
-* routes
+### server.ts
+- Start server
 
-## server.ts
-
-* Start server
-
-Run:
-
+### Run Server
 ```bash
 npm run dev
 ```
 
 ---
 
-# STEP 3: MongoDB Setup
+## MongoDB Setup
 
-## config/db.ts
+### config/db.ts
+- Connect MongoDB
 
-* Connect MongoDB
-
-## models/user.model.ts
-
-* Create user schema
+### models/user.model.ts
+- Create user schema
 
 ---
 
-# STEP 4: User APIs
+## User APIs
 
-## controllers/user.controller.ts
+### controllers/user.controller.ts
+- createUser
+- getUser
 
-* createUser
-* getUser
-
-## routes/user.routes.ts
-
-* POST /user
-* GET /user/:id
+### routes/user.routes.ts
+- POST /user
+- GET /user/:id
 
 ---
 
-# STEP 5: Redis Setup
+## Redis Setup
 
-## Run Redis (Docker)
-
+### Run Redis using Docker
 ```bash
 docker run -d --name redis -p 6379:6379 redis
 ```
 
-Check:
-
+### Verify Container
 ```bash
 docker ps
 ```
 
+### Open Redis CLI
 ```bash
 docker exec -it redis redis-cli
 ```
 
+### Test Redis
 ```bash
 SET test hello
 GET test
@@ -125,38 +115,34 @@ GET test
 
 ---
 
-## config/redis.ts
+## Redis Configuration
 
-* Create Redis client
-* connectRedis()
-
----
-
-# STEP 6: Redis Caching
-
-## In getUser API:
-
-Flow:
-
-```
-Check Redis → If HIT return
-Else → Fetch DB → Save in Redis → Return
-```
-
-Concepts:
-
-* Cache HIT
-* Cache MISS
-* TTL (EX: 60)
+### config/redis.ts
+- Create Redis client
+- Implement connectRedis()
 
 ---
 
-# STEP 7: Cache Invalidation
+## Redis Caching
 
-## updateUser API
+### getUser API Flow
+```
+Check Redis → If HIT return data
+Else → Fetch from DB → Store in Redis → Return data
+```
 
-* Update DB
-* Delete Redis cache
+### Concepts
+- Cache HIT
+- Cache MISS
+- TTL (example: 60 seconds)
+
+---
+
+## Cache Invalidation
+
+### updateUser API
+- Update data in DB
+- Delete cache from Redis
 
 ```ts
 await client.del(id);
@@ -164,88 +150,70 @@ await client.del(id);
 
 ---
 
-# STEP 8: Rate Limiting
+## Rate Limiting
 
-## middleware/rateLimiter.ts
+### middleware/rateLimiter.ts
+- Limit requests per IP
+- Use Redis INCR and EXPIRE
 
-* Limit requests per IP
-* Use Redis INCR + EXPIRE
-
-Apply:
-
+### Apply Middleware
 ```ts
 router.get('/user/:id', rateLimiter, getUser);
 ```
 
 ---
 
-# Testing Flow
+## Testing Flow
 
-1. Create user
-2. GET → Cache MISS
-3. GET again → Cache HIT
-4. Update user → Cache deleted
-5. GET → Cache MISS again
-6. Hit API multiple times → Rate limit
+1. Create user  
+2. First GET → Cache MISS  
+3. Second GET → Cache HIT  
+4. Update user → Cache deleted  
+5. GET again → Cache MISS  
+6. Multiple requests → Rate limiting triggered  
 
 ---
 
-# Docker Commands (Important)
+## Docker Commands
 
-Start Redis:
-
+### Start Redis
 ```bash
 docker run -d --name redis -p 6379:6379 redis
 ```
 
-Check:
-
+### Check Running Containers
 ```bash
 docker ps
 ```
 
-Stop:
-
+### Stop Redis
 ```bash
 docker stop redis
 ```
 
-Remove:
-
+### Remove Redis
 ```bash
 docker rm -f redis
 ```
 
 ---
 
-# Git Workflow
+## Git Workflow
 
 ```bash
 git add .
 git commit -m "message"
 ```
 
-Use meaningful commits:
-
-* "Setup server"
-* "Add MongoDB"
-* "Implement Redis caching"
-* "Add rate limiting"
-
----
-
-# What You Learned
-
-* Backend API development
-* Redis caching (HIT/MISS)
-* Cache invalidation
-* Rate limiting
-* Docker basics
-* Real-world system flow
+### Example Commit Messages
+- Setup server
+- Add MongoDB
+- Implement Redis caching
+- Add rate limiting
 
 ---
 
-# Key Concept
+## Key Concept
 
 ```
 GET → Cache → DB → Cache
@@ -254,7 +222,17 @@ UPDATE → DB → Delete Cache
 
 ---
 
-# Final Result
+## What You Learned
 
-You built a **production-like backend system**
+- Backend API development
+- Redis caching (HIT/MISS)
+- Cache invalidation
+- Rate limiting
+- Docker basics
+- Real-world backend flow
 
+---
+
+## Final Result
+
+You built a production-like backend system using Redis, MongoDB, and TypeScript.

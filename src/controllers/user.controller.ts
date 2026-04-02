@@ -2,12 +2,20 @@ import { Request, Response } from "express";
 import User from "../models/user.model";
 import client from "../config/redis";
 import { CACHE_KEYS } from "../utils/cacheKeys";
+import { userQueue } from "../queues/user.queue";
 
 export const createUser = async (req:Request, res: Response)=>{
     try {
         const user = await User.create(req.body);
         const cacheKey = CACHE_KEYS.USERS_ALL;
         await client.del(cacheKey); 
+        await userQueue.add("sendEmail",{
+            email: user.email,
+            name: user.name,
+        })
+
+        console.log("📩 Job added to queue");
+        
 
         console.log('✅ List cache invalidated (New User Created)');
 
