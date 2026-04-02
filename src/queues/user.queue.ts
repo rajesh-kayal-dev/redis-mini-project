@@ -1,8 +1,10 @@
 import { Queue } from "bullmq";
 
 export const userQueue = new Queue("userQueue", {
+    
     connection:{
-        host: process.env.REDIS_HOST || "redis",
+        url: process.env.REDIS_URL,
         port: 6379,
     },
 })
+

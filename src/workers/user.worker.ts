@@ -1,5 +1,5 @@
 import { Worker } from "bullmq";
-console.log("▶️ Worker started..."); 
+console.log("▶️ Worker started...");
 
 const worker = new Worker(
   "userQueue",
@@ -19,10 +19,18 @@ const worker = new Worker(
   },
   {
     connection: {
-      host: process.env.REDIS_HOST || "redis",
+      url: process.env.REDIS_URL,
       port: 6379,
     },
   }
 );
+
+worker.on("completed", (job) => {
+  console.log(`✅ Job ${job.id} completed successfully`);
+});
+
+worker.on("failed", (job, err) => {
+  console.log(`❌ Job ${job?.id} failed after all retries: ${err.message}`);
+});
 
 export default worker;
